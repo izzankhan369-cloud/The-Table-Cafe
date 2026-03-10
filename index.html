@@ -1,0 +1,574 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Garden Table Café</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:   '#FFF8F0',
+            espresso:'#3A2A1E',
+            caramel: '#C58B5A',
+            caramelLight: '#D9A878',
+            warmGray:'#F0E6DA',
+          },
+          fontFamily: {
+            display: ['Playfair Display', 'serif'],
+            body:    ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #FFF8F0; color: #3A2A1E; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #FFF8F0; }
+    ::-webkit-scrollbar-thumb { background: #C58B5A; border-radius: 3px; }
+
+    /* Nav */
+    #navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: background 0.4s, box-shadow 0.4s; }
+    #navbar.scrolled { background: rgba(255,248,240,0.97); box-shadow: 0 1px 20px rgba(58,42,30,0.08); backdrop-filter: blur(8px); }
+
+    /* Hero */
+    .hero-bg { background-image: url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1800&auto=format&fit=crop'); background-size: cover; background-position: center; }
+    .hero-overlay { background: linear-gradient(to bottom, rgba(30,18,10,0.45) 0%, rgba(30,18,10,0.65) 100%); }
+
+    /* Gold rule */
+    .rule { display: block; width: 48px; height: 2px; background: #C58B5A; }
+
+    /* Menu cards */
+    .menu-card { transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.35s; }
+    .menu-card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(58,42,30,0.12); }
+    .menu-card img { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .menu-card:hover img { transform: scale(1.06); }
+
+    /* Gallery */
+    .gallery-item img { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .gallery-item:hover img { transform: scale(1.07); }
+
+    /* CTA button */
+    .btn-wa {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 15px 38px; background: #25D366; color: #fff;
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500;
+      letter-spacing: 0.08em; text-decoration: none;
+      border-radius: 2px; transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 6px 24px rgba(37,211,102,0.25);
+    }
+    .btn-wa:hover { background: #1ebe5a; transform: translateY(-2px); box-shadow: 0 10px 32px rgba(37,211,102,0.3); }
+
+    .btn-caramel {
+      display: inline-block; padding: 13px 36px;
+      border: 1px solid #C58B5A; color: #FFF8F0;
+      font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 400;
+      letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none;
+      position: relative; overflow: hidden; transition: color 0.35s;
+    }
+    .btn-caramel::before {
+      content: ''; position: absolute; inset: 0;
+      background: #C58B5A; transform: scaleX(0); transform-origin: left;
+      transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94); z-index: 0;
+    }
+    .btn-caramel:hover::before { transform: scaleX(1); }
+    .btn-caramel:hover { color: #FFF8F0; }
+    .btn-caramel span { position: relative; z-index: 1; }
+
+    /* Map */
+    .map-wrap { background: #e8ddd0; position: relative; overflow: hidden; border-radius: 2px; }
+
+    /* Form inputs */
+    .field {
+      width: 100%; background: transparent;
+      border: none; border-bottom: 1px solid rgba(58,42,30,0.2);
+      padding: 10px 0; font-family: 'Inter', sans-serif; font-size: 0.9rem;
+      color: #3A2A1E; outline: none; transition: border-color 0.3s;
+    }
+    .field::placeholder { color: rgba(58,42,30,0.38); }
+    .field:focus { border-color: #C58B5A; }
+
+    .reveal { opacity: 0; transform: translateY(44px); }
+  </style>
+</head>
+
+<body>
+
+<!-- ══════════════════════════════
+     NAVIGATION
+══════════════════════════════ -->
+<nav id="navbar" class="py-5 px-6 md:px-14">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+
+    <a href="#hero" class="flex flex-col leading-none">
+      <span style="font-family:'Playfair Display',serif; font-size:1.1rem; color:#C58B5A; letter-spacing:0.03em;">The Garden Table</span>
+      <span style="font-family:'Inter',sans-serif; font-size:0.58rem; letter-spacing:0.24em; text-transform:uppercase; color:rgba(255,248,240,0.65);" id="brand-sub">Café · Old Quarter</span>
+    </a>
+
+    <ul class="hidden md:flex items-center gap-9">
+      <li><a href="#menu"    class="nav-lnk text-xs tracking-widest uppercase" style="color:rgba(255,248,240,0.8); transition:color 0.3s;">Menu</a></li>
+      <li><a href="#story"   class="nav-lnk text-xs tracking-widest uppercase" style="color:rgba(255,248,240,0.8); transition:color 0.3s;">Our Story</a></li>
+      <li><a href="#gallery" class="nav-lnk text-xs tracking-widest uppercase" style="color:rgba(255,248,240,0.8); transition:color 0.3s;">Gallery</a></li>
+      <li><a href="#location"class="nav-lnk text-xs tracking-widest uppercase" style="color:rgba(255,248,240,0.8); transition:color 0.3s;">Visit Us</a></li>
+      <li><a href="#order"   class="btn-caramel text-xs py-3 px-5"><span>Order Now</span></a></li>
+    </ul>
+
+    <button id="burgerBtn" class="md:hidden flex flex-col gap-1.5 p-1" aria-label="Menu">
+      <span class="block w-6 h-px bg-cream transition-all"></span>
+      <span class="block w-4 h-px bg-cream transition-all"></span>
+      <span class="block w-6 h-px bg-cream transition-all"></span>
+    </button>
+  </div>
+
+  <div id="mobileNav" class="md:hidden overflow-hidden max-h-0 transition-all duration-500" style="background:rgba(42,24,12,0.97);">
+    <ul class="flex flex-col items-center gap-6 py-8">
+      <li><a href="#menu"    class="mob-lnk text-xs tracking-widest uppercase text-cream opacity-75">Menu</a></li>
+      <li><a href="#story"   class="mob-lnk text-xs tracking-widest uppercase text-cream opacity-75">Our Story</a></li>
+      <li><a href="#gallery" class="mob-lnk text-xs tracking-widest uppercase text-cream opacity-75">Gallery</a></li>
+      <li><a href="#location"class="mob-lnk text-xs tracking-widest uppercase text-cream opacity-75">Visit Us</a></li>
+      <li><a href="#order"   class="mob-lnk text-xs tracking-widest uppercase text-caramel">Order Now</a></li>
+    </ul>
+  </div>
+</nav>
+
+
+<!-- ══════════════════════════════
+     HERO
+══════════════════════════════ -->
+<section id="hero" class="hero-bg relative min-h-screen flex items-center justify-center">
+  <div class="hero-overlay absolute inset-0"></div>
+
+  <div class="relative z-10 text-center px-6 max-w-3xl mx-auto">
+    <p class="hero-el mb-4 text-xs tracking-[0.3em] uppercase" style="color:#C58B5A; font-family:'Inter',sans-serif; opacity:0;">
+      Est. 2018 · Handcrafted with love
+    </p>
+    <h1 class="hero-el mb-5 leading-tight" style="font-family:'Playfair Display',serif; font-size:clamp(2.6rem,7vw,5.2rem); color:#FFF8F0; opacity:0;">
+      Where Coffee<br/>Meets <em style="color:#C58B5A;">Comfort</em>
+    </h1>
+    <p class="hero-el mb-10 text-base md:text-lg font-light tracking-wide" style="color:rgba(255,248,240,0.78); font-family:'Inter',sans-serif; opacity:0;">
+      A cozy corner for slow mornings, warm brews, and good company.
+    </p>
+    <div class="hero-el" style="opacity:0;">
+      <a href="#menu" class="btn-caramel"><span>Explore Our Menu</span></a>
+    </div>
+  </div>
+
+  <div class="absolute bottom-9 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
+    <span class="text-xs tracking-widest uppercase" style="color:#FFF8F0; font-family:'Inter',sans-serif;">Scroll</span>
+    <div style="width:1px; height:44px; background:linear-gradient(to bottom,#FFF8F0,transparent);"></div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     MENU
+══════════════════════════════ -->
+<section id="menu" class="py-28 px-6 md:px-14">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center reveal mb-16">
+      <p class="text-xs tracking-[0.26em] uppercase mb-3" style="color:#C58B5A; font-family:'Inter',sans-serif;">What We Serve</p>
+      <h2 style="font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3.5vw,2.8rem); color:#3A2A1E;">Our Menu</h2>
+      <span class="rule mt-4 mx-auto block"></span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      <!-- Coffee -->
+      <div class="reveal menu-card bg-white rounded-sm overflow-hidden shadow-sm">
+        <div class="overflow-hidden" style="aspect-ratio:4/3;">
+          <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&auto=format&fit=crop" alt="Coffee" loading="lazy" class="w-full h-full object-cover" />
+        </div>
+        <div class="p-7">
+          <p class="text-xs tracking-widest uppercase mb-2" style="color:#C58B5A; font-family:'Inter',sans-serif;">Beverages</p>
+          <h3 class="mb-3" style="font-family:'Playfair Display',serif; font-size:1.4rem; color:#3A2A1E;">Coffee & Brews</h3>
+          <p class="text-sm leading-relaxed mb-5" style="color:rgba(58,42,30,0.62); font-family:'Inter',sans-serif; font-weight:300;">Single-origin espresso, cold brews, pour-overs, and seasonal lattes crafted to order.</p>
+          <ul class="space-y-2">
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Signature Latte</span><span style="color:#C58B5A;">₹220</span>
+            </li>
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Cold Brew</span><span style="color:#C58B5A;">₹240</span>
+            </li>
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Pour Over</span><span style="color:#C58B5A;">₹280</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Breakfast -->
+      <div class="reveal menu-card bg-white rounded-sm overflow-hidden shadow-sm">
+        <div class="overflow-hidden" style="aspect-ratio:4/3;">
+          <img src="https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=800&auto=format&fit=crop" alt="Breakfast" loading="lazy" class="w-full h-full object-cover" />
+        </div>
+        <div class="p-7">
+          <p class="text-xs tracking-widest uppercase mb-2" style="color:#C58B5A; font-family:'Inter',sans-serif;">Morning</p>
+          <h3 class="mb-3" style="font-family:'Playfair Display',serif; font-size:1.4rem; color:#3A2A1E;">Breakfast</h3>
+          <p class="text-sm leading-relaxed mb-5" style="color:rgba(58,42,30,0.62); font-family:'Inter',sans-serif; font-weight:300;">Slow mornings deserve good food — eggs every way, sourdough toasts, and fresh fruit bowls.</p>
+          <ul class="space-y-2">
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Avocado Toast</span><span style="color:#C58B5A;">₹320</span>
+            </li>
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Eggs Benedict</span><span style="color:#C58B5A;">₹360</span>
+            </li>
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Granola Bowl</span><span style="color:#C58B5A;">₹280</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Desserts -->
+      <div class="reveal menu-card bg-white rounded-sm overflow-hidden shadow-sm">
+        <div class="overflow-hidden" style="aspect-ratio:4/3;">
+          <img src="https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&auto=format&fit=crop" alt="Desserts" loading="lazy" class="w-full h-full object-cover" />
+        </div>
+        <div class="p-7">
+          <p class="text-xs tracking-widest uppercase mb-2" style="color:#C58B5A; font-family:'Inter',sans-serif;">Sweet Things</p>
+          <h3 class="mb-3" style="font-family:'Playfair Display',serif; font-size:1.4rem; color:#3A2A1E;">Desserts</h3>
+          <p class="text-sm leading-relaxed mb-5" style="color:rgba(58,42,30,0.62); font-family:'Inter',sans-serif; font-weight:300;">House-baked pastries, tarts, and cakes that pair perfectly with your afternoon cup.</p>
+          <ul class="space-y-2">
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Almond Croissant</span><span style="color:#C58B5A;">₹180</span>
+            </li>
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Lemon Tart</span><span style="color:#C58B5A;">₹200</span>
+            </li>
+            <li class="flex justify-between text-sm" style="color:#3A2A1E; font-family:'Inter',sans-serif;">
+              <span>Brownie Stack</span><span style="color:#C58B5A;">₹220</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     CHEF STORY
+══════════════════════════════ -->
+<section id="story" class="py-24 px-6 md:px-14" style="background:#F0E6DA;">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+
+    <div class="reveal overflow-hidden rounded-sm shadow-lg" style="aspect-ratio:4/5;">
+      <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=900&auto=format&fit=crop" alt="Café story" loading="lazy" class="w-full h-full object-cover gallery-item" />
+    </div>
+
+    <div class="reveal">
+      <p class="text-xs tracking-[0.26em] uppercase mb-4" style="color:#C58B5A; font-family:'Inter',sans-serif;">Our Story</p>
+      <h2 class="mb-5 leading-snug" style="font-family:'Playfair Display',serif; font-size:clamp(1.9rem,3.8vw,3rem); color:#3A2A1E;">
+        Brewed with Intention,<br/><em>Served with Heart</em>
+      </h2>
+      <span class="rule mb-8 block" style="margin-left:0;"></span>
+      <p class="text-sm leading-relaxed mb-5" style="color:rgba(58,42,30,0.68); font-family:'Inter',sans-serif; font-weight:300;">
+        The Garden Table was born from a simple belief: that a good cup of coffee and a warm plate of food can make any morning feel meaningful. Chef Priya Nair spent seven years honing her craft in Melbourne before returning home to build a café that felt like an extension of her own kitchen.
+      </p>
+      <p class="text-sm leading-relaxed mb-10" style="color:rgba(58,42,30,0.68); font-family:'Inter',sans-serif; font-weight:300;">
+        Every item on our menu is seasonal, thoughtfully sourced, and made fresh daily. We believe in slowing down, sitting with a friend, and savouring the small rituals that make life good.
+      </p>
+      <a href="#gallery" class="btn-caramel" style="color:#3A2A1E; border-color:#C58B5A;">
+        <span style="color:#3A2A1E;">See Our Space</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     GALLERY
+══════════════════════════════ -->
+<section id="gallery" class="py-28 px-6 md:px-14">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center reveal mb-14">
+      <p class="text-xs tracking-[0.26em] uppercase mb-3" style="color:#C58B5A; font-family:'Inter',sans-serif;">A Visual Menu</p>
+      <h2 style="font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3.5vw,2.8rem); color:#3A2A1E;">From Our Table</h2>
+      <span class="rule mt-4 mx-auto block"></span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-12 gap-3 md:gap-4">
+
+      <div class="reveal gallery-item col-span-2 md:col-span-8 overflow-hidden rounded-sm shadow" style="aspect-ratio:16/9;">
+        <img src="https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=1000&auto=format&fit=crop" alt="Café interior" loading="lazy" class="w-full h-full object-cover" />
+      </div>
+
+      <div class="reveal gallery-item col-span-1 md:col-span-4 overflow-hidden rounded-sm shadow" style="min-height:200px;">
+        <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop" alt="Coffee" loading="lazy" class="w-full h-full object-cover" />
+      </div>
+
+      <div class="reveal gallery-item col-span-1 md:col-span-4 overflow-hidden rounded-sm shadow" style="aspect-ratio:4/3;">
+        <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=600&auto=format&fit=crop" alt="Pastry" loading="lazy" class="w-full h-full object-cover" />
+      </div>
+
+      <div class="reveal gallery-item col-span-1 md:col-span-4 overflow-hidden rounded-sm shadow" style="aspect-ratio:4/3;">
+        <img src="https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=600&auto=format&fit=crop" alt="Breakfast plate" loading="lazy" class="w-full h-full object-cover" />
+      </div>
+
+      <div class="reveal gallery-item col-span-1 md:col-span-4 overflow-hidden rounded-sm shadow" style="aspect-ratio:4/3;">
+        <img src="https://images.unsplash.com/photo-1481833761820-0509d3217039?w=600&auto=format&fit=crop" alt="Café table" loading="lazy" class="w-full h-full object-cover" />
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     LOCATION
+══════════════════════════════ -->
+<section id="location" class="py-24 px-6 md:px-14" style="background:#F0E6DA;">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center reveal mb-14">
+      <p class="text-xs tracking-[0.26em] uppercase mb-3" style="color:#C58B5A; font-family:'Inter',sans-serif;">Find Us</p>
+      <h2 style="font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3.5vw,2.8rem); color:#3A2A1E;">Come Visit</h2>
+      <span class="rule mt-4 mx-auto block"></span>
+    </div>
+
+    <div class="reveal grid md:grid-cols-3 gap-8 mb-10 text-center">
+      <div>
+        <p class="text-xs tracking-widest uppercase mb-2" style="color:#C58B5A; font-family:'Inter',sans-serif;">Address</p>
+        <p class="text-sm leading-relaxed" style="color:rgba(58,42,30,0.68); font-family:'Inter',sans-serif; font-weight:300;">
+          12 Garden Lane, Old Quarter,<br/>Panjim, Goa – 403 001
+        </p>
+      </div>
+      <div>
+        <p class="text-xs tracking-widest uppercase mb-2" style="color:#C58B5A; font-family:'Inter',sans-serif;">Hours</p>
+        <p class="text-sm leading-relaxed" style="color:rgba(58,42,30,0.68); font-family:'Inter',sans-serif; font-weight:300;">
+          Monday – Friday: 7:30 AM – 9 PM<br/>Saturday – Sunday: 8 AM – 10 PM
+        </p>
+      </div>
+      <div>
+        <p class="text-xs tracking-widest uppercase mb-2" style="color:#C58B5A; font-family:'Inter',sans-serif;">Contact</p>
+        <p class="text-sm leading-relaxed" style="color:rgba(58,42,30,0.68); font-family:'Inter',sans-serif; font-weight:300;">
+          +91 98000 00000<br/>hello@gardentable.in
+        </p>
+      </div>
+    </div>
+
+    <div class="reveal map-wrap shadow-lg" style="height:380px;">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3843!2d73.8278!3d15.4909!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bbfba106b4d2a6b%3A0x8c0e5ebe9a7ae7ca!2sPanaji%2C+Goa!5e0!3m2!1sen!2sin!4v1700000000000"
+        width="100%" height="100%"
+        style="border:0; filter:sepia(15%) contrast(92%);"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="The Garden Table Café location"
+      ></iframe>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     CTA / ORDER
+══════════════════════════════ -->
+<section id="order" class="py-28 px-6 md:px-14" style="background-image:url('https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1600&auto=format&fit=crop'); background-size:cover; background-position:center; position:relative;">
+  <div class="absolute inset-0" style="background:rgba(30,18,10,0.72);"></div>
+  <div class="relative z-10 max-w-xl mx-auto text-center reveal">
+    <p class="text-xs tracking-[0.28em] uppercase mb-4" style="color:#C58B5A; font-family:'Inter',sans-serif;">Ready to Order?</p>
+    <h2 class="mb-5 leading-snug" style="font-family:'Playfair Display',serif; font-size:clamp(1.9rem,4vw,3rem); color:#FFF8F0;">
+      Order Straight<br/>from <em style="color:#C58B5A;">WhatsApp</em>
+    </h2>
+    <p class="text-sm mb-10 font-light" style="color:rgba(255,248,240,0.7); font-family:'Inter',sans-serif; line-height:1.8;">
+      Skip the wait. Message us your order and we'll have it ready for pickup or deliver it to your door.
+    </p>
+    <a href="https://wa.me/919800000000?text=Hi!%20I'd%20like%20to%20place%20an%20order%20from%20The%20Garden%20Table." target="_blank" rel="noopener noreferrer" class="btn-wa">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      Order on WhatsApp
+    </a>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════
+     FOOTER
+══════════════════════════════ -->
+<footer class="py-16 px-8 md:px-14" style="background:#3A2A1E;">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="grid md:grid-cols-3 gap-12 mb-12">
+
+      <div>
+        <p style="font-family:'Playfair Display',serif; font-size:1.3rem; color:#C58B5A;" class="mb-1">The Garden Table</p>
+        <p class="text-xs tracking-widest uppercase mb-5" style="color:rgba(255,248,240,0.35); font-family:'Inter',sans-serif;">Café · Est. 2018</p>
+        <p class="text-sm leading-relaxed" style="color:rgba(255,248,240,0.5); font-family:'Inter',sans-serif; font-weight:300;">
+          A warm corner café where every cup is crafted with care and every bite made from scratch.
+        </p>
+      </div>
+
+      <div>
+        <p class="text-xs tracking-widest uppercase mb-5" style="color:#C58B5A; font-family:'Inter',sans-serif;">Opening Hours</p>
+        <ul class="space-y-2">
+          <li class="flex justify-between text-sm" style="color:rgba(255,248,240,0.55); font-family:'Inter',sans-serif; font-weight:300;">
+            <span>Monday – Friday</span><span>7:30 AM – 9:00 PM</span>
+          </li>
+          <li class="flex justify-between text-sm" style="color:rgba(255,248,240,0.55); font-family:'Inter',sans-serif; font-weight:300;">
+            <span>Saturday</span><span>8:00 AM – 10:00 PM</span>
+          </li>
+          <li class="flex justify-between text-sm" style="color:rgba(255,248,240,0.55); font-family:'Inter',sans-serif; font-weight:300;">
+            <span>Sunday</span><span>8:00 AM – 10:00 PM</span>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="text-xs tracking-widest uppercase mb-5" style="color:#C58B5A; font-family:'Inter',sans-serif;">Get in Touch</p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C58B5A" stroke-width="1.5" stroke-linecap="round" class="mt-0.5 shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="text-sm" style="color:rgba(255,248,240,0.5); font-family:'Inter',sans-serif; font-weight:300; line-height:1.6;">12 Garden Lane, Old Quarter, Panjim, Goa</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C58B5A" stroke-width="1.5" stroke-linecap="round" class="shrink-0"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            <a href="tel:+919800000000" class="text-sm" style="color:rgba(255,248,240,0.5); font-family:'Inter',sans-serif; font-weight:300; text-decoration:none;">+91 98000 00000</a>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C58B5A" stroke-width="1.5" stroke-linecap="round" class="shrink-0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <a href="mailto:hello@gardentable.in" class="text-sm" style="color:rgba(255,248,240,0.5); font-family:'Inter',sans-serif; font-weight:300; text-decoration:none;">hello@gardentable.in</a>
+          </li>
+        </ul>
+
+        <!-- Social -->
+        <div class="flex gap-3 mt-6">
+          <a href="#" aria-label="Instagram" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid rgba(255,248,240,0.18); border-radius:50%; color:rgba(255,248,240,0.6); transition:border-color 0.3s, color 0.3s;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+          </a>
+          <a href="#" aria-label="Facebook" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid rgba(255,248,240,0.18); border-radius:50%; color:rgba(255,248,240,0.6); transition:border-color 0.3s, color 0.3s;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="https://wa.me/919800000000" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid rgba(255,248,240,0.18); border-radius:50%; color:rgba(255,248,240,0.6); transition:border-color 0.3s, color 0.3s;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4" style="border-top:1px solid rgba(255,248,240,0.08);">
+      <p class="text-xs" style="color:rgba(255,248,240,0.22); font-family:'Inter',sans-serif;">© 2025 The Garden Table Café. All rights reserved.</p>
+      <div class="flex gap-6">
+        <a href="#" class="text-xs" style="color:rgba(255,248,240,0.22); font-family:'Inter',sans-serif; text-decoration:none;">Privacy</a>
+        <a href="#" class="text-xs" style="color:rgba(255,248,240,0.22); font-family:'Inter',sans-serif; text-decoration:none;">Terms</a>
+      </div>
+    </div>
+
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════
+     JAVASCRIPT
+══════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ── Navbar scroll ── */
+  var navbar   = document.getElementById('navbar');
+  var navLinks = document.querySelectorAll('.nav-lnk');
+  var brandSub = document.getElementById('brand-sub');
+
+  window.addEventListener('scroll', function () {
+    if (window.scrollY > 60) {
+      navbar.classList.add('scrolled');
+      navLinks.forEach(function (l) { l.style.color = 'rgba(58,42,30,0.72)'; });
+      brandSub.style.color = 'rgba(58,42,30,0.45)';
+    } else {
+      navbar.classList.remove('scrolled');
+      navLinks.forEach(function (l) { l.style.color = 'rgba(255,248,240,0.8)'; });
+      brandSub.style.color = 'rgba(255,248,240,0.65)';
+    }
+  }, { passive: true });
+
+  /* ── Mobile menu ── */
+  var burgerBtn  = document.getElementById('burgerBtn');
+  var mobileNav  = document.getElementById('mobileNav');
+  var mobLinks   = document.querySelectorAll('.mob-lnk');
+  var menuOpen   = false;
+
+  function toggleMobileMenu() {
+    menuOpen = !menuOpen;
+    mobileNav.style.maxHeight = menuOpen ? mobileNav.scrollHeight + 'px' : '0';
+  }
+  burgerBtn.addEventListener('click', toggleMobileMenu);
+  mobLinks.forEach(function (l) { l.addEventListener('click', function () { if (menuOpen) toggleMobileMenu(); }); });
+
+  /* ── Hero entrance ── */
+  var heroEls = document.querySelectorAll('.hero-el');
+  gsap.to(heroEls, {
+    opacity: 1,
+    y: 0,
+    duration: 1.1,
+    ease: 'power3.out',
+    stagger: 0.2,
+    delay: 0.25,
+    onStart: function () {
+      heroEls.forEach(function (el) { el.style.transform = 'translateY(32px)'; });
+    }
+  });
+
+  /* ── Scroll reveals ── */
+  document.querySelectorAll('.reveal').forEach(function (el) {
+    gsap.fromTo(
+      el,
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.9,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 87%',
+          toggleActions: 'play none none none'
+        }
+      }
+    );
+  });
+
+  /* ── Smooth anchor scroll ── */
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+
+  /* ── Date min on any date inputs (future-proofing) ── */
+  var today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(function (d) { d.setAttribute('min', today); });
+
+})();
+</script>
+
+</body>
+</html>
+```
